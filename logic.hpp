@@ -18,16 +18,20 @@ enum CLColor {
 		COLOR6,
 		COLOR7,
 		NOCOLOR
-	     };
+};
+
+struct CLPosition {
+	int x;
+	int y;
+};
+
+bool operator==(CLPosition& a, CLPosition& b);
 
 class CLCell
 {
 	CLColor color;
-	int x;
-	int y;
 public:
-	CLCell(int cellIndex);
-	CLCell(int posX, int posY);
+	CLCell();
 	CLColor getColor();
 	bool setColor(CLColor newColor);
 	bool setColor(CLCell* &c);
@@ -39,8 +43,9 @@ class CLBoard
 	CLCell* board[9][9];
 	int currentX;
 	int currentY;
+	bool m_isSelected;
 	int m_score;
-	CLColor nexts[3];
+	CLCell* nexts[3];
 	static CLBoard* m_instance;
 public:
 	static CLBoard* getInstance();
@@ -50,6 +55,8 @@ public:
 	CLCell* getCell(int x, int y);
 	void reset();
 	bool isNotFill();
+	CLPosition getSelection();
+	bool isSelected();
 protected:
 	CLBoard();
 	void generateNexts();

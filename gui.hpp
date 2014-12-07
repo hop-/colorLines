@@ -20,6 +20,8 @@ class Gui :
 
 	CLBoard* m_brd;
 
+	CLPosition m_currentSelection;
+
 	SDL_Window* m_window;
 
 	SDL_Surface* m_surface;
@@ -30,14 +32,6 @@ class Gui :
 	SDL_Rect m_rectDst;
 	
 	SDL_Texture* m_txtr;
-	SDL_Texture* m_txtrCell;
-	SDL_Texture* m_txtrRedBall;
-	SDL_Texture* m_txtrGreenBall;
-	SDL_Texture* m_txtrBlueBall;
-	SDL_Texture* m_txtrCyanBall;
-	SDL_Texture* m_txtrYellowBall;
-	SDL_Texture* m_txtrOrangeBall;
-	SDL_Texture* m_txtrMagentaBall;
 public:
 	Gui();
 	int init();
@@ -49,6 +43,7 @@ private:
 	bool preInit();
 	void drawBoard();	
 	void drawCellColor(int x, int y);
+	void drawSelection();
 };
 
 #endif //_GUI_HPP_

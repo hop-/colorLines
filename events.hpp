@@ -8,15 +8,10 @@ enum EventTypes {
 		EV_NOEVENT
 };
 
-enum Action{
-		AC_NOACTION,
-};
-
 struct Event
 {
 	EventTypes type;
 	int x, y;
-	Action action;
 };
 
 #endif //_EVENTS_HPP_

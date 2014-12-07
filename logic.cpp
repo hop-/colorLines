@@ -1,22 +1,21 @@
 #include "logic.hpp"
 #include "test.hpp"
 
+//
+//-----------------------------------------------------------
+//
+
+bool operator==(CLPosition& a, CLPosition& b)
+{
+	return (a.x == b.x && a.y == b.y);
+}
 
 //
 //-----------------------------------------------------------
 //
-CLCell::CLCell(int cellIndex) : color(NOCOLOR)
+CLCell::CLCell() : color(NOCOLOR)
 {
-	y = int(cellIndex / 9);
-	x = cellIndex % 9;
 }
-
-CLCell::CLCell(int posX, int posY) : color(NOCOLOR)
-{
-	x = posX;
-	y = posY;
-}
-
 
 CLColor CLCell::getColor()
 {
@@ -56,12 +55,16 @@ CLBoard* CLBoard::m_instance = NULL;
 
 CLBoard::CLBoard() : 
 		currentX(0),
-		currentY(0)
+		currentY(0),
+		m_isSelected(false)
 {
 	for (int x = 0; x < BOARD_SIZE; ++x) {
 		for (int y = 0; y < BOARD_SIZE; ++y) {
-			board[x][y] = new CLCell(x, y);
+			board[x][y] = new CLCell();
 		}
+	}
+	for (int i = 0; i < 3; ++i) {
+		nexts[i] = new CLCell();
 	}
 	reset();
 }
@@ -80,6 +83,9 @@ CLBoard::~CLBoard()
 		for (int y = 0; y < BOARD_SIZE; ++y) {
 			delete board[x][y];
 		}
+	}
+	for (int i = 0; i < 3; ++i) {
+		delete nexts[i];
 	}
 }
 
@@ -101,9 +107,11 @@ void CLBoard::select(int posX, int posY)
 			clearLines(posX, posY);
 			putNextsToBoard();
 			generateNexts();
+			m_isSelected = false;
 		} else {
 			currentX = posX;
 			currentY = posY;
+			m_isSelected = true;
 		}
 	}
 }
@@ -135,10 +143,27 @@ bool CLBoard::isNotFill()
 	return  static_cast<bool>(getNmOfFreeCells());
 }
 
+CLPosition CLBoard::getSelection()
+{
+	//C++ old
+	CLPosition p;
+	p.x = currentX;
+	p.y = currentY;
+	return p;
+	//
+	// return CLPosition{currentX, currentY}; available in c++11
+}
+
+bool CLBoard::isSelected()
+{
+	return m_isSelected;
+}
+
 void CLBoard::generateNexts()
 {
 	for (int i = 0; i < 3; ++i) {
-		nexts[i] = static_cast<CLColor>(rand() % NOCOLOR);
+		nexts[i]->resetColor();
+		nexts[i]->setColor(static_cast<CLColor>(rand() % NOCOLOR));
 	}
 }
 
@@ -167,7 +192,7 @@ void CLBoard::putNextsToBoard()
 				_PRINT(p);
 				_PXY(x, y);
 			}
-			board[x][y]->setColor(nexts[i]);
+			board[x][y]->setColor(nexts[i]->getColor());
 			clearLines(x, y);
 			if (!isNotFill()) {
 				break;

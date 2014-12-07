@@ -2,10 +2,8 @@
 #include "test.hpp"
 
 Gui::Gui():
-		//m_cellSize(100),
-		//m_screenWidth(9 * m_cellSize),
-		//m_screenHeight(9 * m_cellSize),
 		m_brd(CLBoard::getInstance()),
+		m_currentSelection(m_brd->getSelection()),
 		m_window(NULL),
 		m_surface(NULL),
 		m_renderer(NULL),
@@ -100,6 +98,30 @@ void Gui::drawBoard()
 			drawCellColor(x, y);
 		}
 	}
+	drawSelection();
+}
+
+void Gui::drawSelection()
+{
+	if (!m_brd->isSelected()) {
+		return;
+	}
+	CLPosition p = m_brd->getSelection();
+	SDL_Rect rect;
+	rect.x = m_cellSize * p.x;
+	rect.y = m_cellSize * p.y;
+	rect.w = m_cellSize;
+	rect.h = m_cellSize;
+	SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 255);
+	for (int i = 0; i < m_cellSize * 4 / 100; ++i) {
+		SDL_RenderDrawRect(m_renderer, &rect);
+		rect.x++;
+		rect.y++;
+		rect.w-=2;
+		rect.h-=2;
+	}
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+	m_currentSelection = p;
 }
 
 void Gui::drawCellColor(int x, int y)
@@ -148,32 +170,27 @@ Event* Gui::getEvent()
 {
 	Event* gameEvent = NULL;
 	SDL_Event sdlEvent;
-	while (gameEvent == NULL) {
-		if(SDL_WaitEvent(&sdlEvent)) {
-			switch (sdlEvent.type) {
-			  case SDL_MOUSEBUTTONDOWN:
-				if (sdlEvent.button.button == SDL_BUTTON_LEFT) {
-					gameEvent = new Event;
-					gameEvent->type = EV_SELECT;
-					// TMP
-					gameEvent->x = sdlEvent.button.x / (m_screenWidth / BOARD_SIZE);
-					gameEvent->y = sdlEvent.button.y / (m_screenWidth / BOARD_SIZE);
-				}
-			  break;
-			  case SDL_QUIT:
-				gameEvent = new Event;
-				gameEvent->type = EV_QUIT;
-			  break;
-			  case SDL_KEYUP:
-			  	switch (sdlEvent.key.keysym.scancode) {
-				  case SDL_SCANCODE_F2:
-				  	gameEvent = new Event;
-					gameEvent->type = EV_RESET;
-				  default:
-				  break;
-				}
+	if(SDL_WaitEvent(&sdlEvent)) {
+		gameEvent = new Event;
+		switch (sdlEvent.type) {
+		  case SDL_MOUSEBUTTONDOWN:
+			if (sdlEvent.button.button == SDL_BUTTON_LEFT) {
+				gameEvent->type = EV_SELECT;
+				gameEvent->x = sdlEvent.button.x / (m_screenWidth / BOARD_SIZE);
+				gameEvent->y = sdlEvent.button.y / (m_screenWidth / BOARD_SIZE);
+			}
+		  break;
+		  case SDL_QUIT:
+			gameEvent->type = EV_QUIT;
+		  break;
+		  case SDL_KEYUP:
+		  	switch (sdlEvent.key.keysym.scancode) {
+			  case SDL_SCANCODE_F2:
+				gameEvent->type = EV_RESET;
+			  default:
 			  break;
 			}
+		  break;
 		}
 	}
 	return gameEvent;
