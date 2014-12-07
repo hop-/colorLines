@@ -1,0 +1,44 @@
+#include "game.hpp"
+
+Game::Game() :
+		m_lgc(CLBoard::getInstance()),
+		m_gi(new Gui()),
+		m_running(true)
+{}
+
+Game::~Game()
+{
+	delete m_gi;
+}
+
+void Game::start()
+{
+	if (m_gi->init() == 0) {
+		mainLoop();
+		m_gi->destroy();
+	}
+}
+
+void Game::mainLoop()
+{
+	Event* e;
+	while (m_running) {
+		e = m_gi->getEvent();
+		if (e != NULL) {
+			switch(e->type){
+			  case EV_SELECT:
+				m_lgc->select(e->x, e->y);
+			  break;
+			  case EV_RESET:
+			  	m_lgc->reset();
+			  break;
+			  case EV_QUIT:
+				m_running = false;
+			  default:
+			  break;
+			}
+			delete e;
+		}
+		m_gi->render();
+	}
+}
