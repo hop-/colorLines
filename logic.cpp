@@ -5,6 +5,22 @@
 //-----------------------------------------------------------
 //
 
+CLPosition::CLPosition(int posX = 0, int posY = 0) :
+		x(posX),
+		y(posY)
+{}
+
+bool CLPosition::isCorrect()
+{
+	return (x >= 0 && x < BOARD_SIZE &&
+		y >= 0 && y < BOARD_SIZE);
+}
+
+bool operator!=(CLPosition& a, CLPosition& b)
+{
+	return (a.x != b.x || a.y != b.y);
+}
+
 bool operator==(CLPosition& a, CLPosition& b)
 {
 	return (a.x == b.x && a.y == b.y);
@@ -54,8 +70,7 @@ bool CLCell::setColor(CLCell* &c)
 CLBoard* CLBoard::m_instance = NULL;
 
 CLBoard::CLBoard() : 
-		currentX(0),
-		currentY(0),
+		m_currentSelection(-1, -1),
 		m_isSelected(false)
 {
 	for (int x = 0; x < BOARD_SIZE; ++x) {
@@ -96,23 +111,30 @@ CLCell* CLBoard::getCell(int x, int y)
 
 void CLBoard::select(int posX, int posY)
 {
-	if (isNotFill() &&
-			!(posX == currentX && posY == currentY) &&
-	    		posX >= 0 && posX < 9 &&
-	    		posY >= 0 && posY < 9) {
-	    	if (board[posX][posY]->getColor() == NOCOLOR &&
-		    board[currentX][currentY]->getColor() != NOCOLOR &&
-		    hasWay(posX, posY)) {
-			board[posX][posY]->setColor(board[currentX][currentY]);
-			clearLines(posX, posY);
-			putNextsToBoard();
-			generateNexts();
-			m_isSelected = false;
-		} else {
-			currentX = posX;
-			currentY = posY;
-			m_isSelected = true;
-		}
+	CLPosition p(posX, posY);
+	select(p);
+}
+
+void CLBoard::select(CLPosition p)
+{
+	if (!isNotFill() ||
+	    !p.isCorrect())
+	{
+		return;
+	}
+	if (m_isSelected &&
+	    board[p.x][p.y]->getColor() == NOCOLOR &&
+	    board[m_currentSelection.x][m_currentSelection.y]->getColor() != NOCOLOR &&
+	    hasWay(p))
+	{
+		board[p.x][p.y]->setColor(board[m_currentSelection.x][m_currentSelection.y]);
+		clearLines(p);
+		putNextsToBoard();
+		generateNexts();
+		m_isSelected = false;
+	} else {
+		m_currentSelection = p;
+		m_isSelected = true;
 	}
 }
 
@@ -135,7 +157,7 @@ void CLBoard::reset()
 	putNextsToBoard();
 }
 
-void CLBoard::clearLines(int x, int y)
+void CLBoard::clearLines(CLPosition p)
 {}
 
 bool CLBoard::isNotFill()
@@ -145,13 +167,7 @@ bool CLBoard::isNotFill()
 
 CLPosition CLBoard::getSelection()
 {
-	//C++ old
-	CLPosition p;
-	p.x = currentX;
-	p.y = currentY;
-	return p;
-	//
-	// return CLPosition{currentX, currentY}; available in c++11
+	return m_currentSelection;
 }
 
 bool CLBoard::isSelected()
@@ -187,13 +203,9 @@ void CLBoard::putNextsToBoard()
 					break;
 				}
 			}
-			if (x > 8 || y > 8) {
-				_PRINT(r);
-				_PRINT(p);
-				_PXY(x, y);
-			}
 			board[x][y]->setColor(nexts[i]->getColor());
-			clearLines(x, y);
+			CLPosition tmp(x, y);
+			clearLines(tmp);
 			if (!isNotFill()) {
 				break;
 			}
@@ -214,7 +226,7 @@ int CLBoard::getNmOfFreeCells()
 	return i;
 }
 
-bool CLBoard::hasWay(int posX, int posY)
+bool CLBoard::hasWay(CLPosition p)
 {
 	//TODO
 	return true;

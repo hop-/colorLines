@@ -5,6 +5,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "logic.hpp"
 #include "events.hpp"
@@ -32,6 +33,8 @@ class Gui :
 	SDL_Rect m_rectDst;
 	
 	SDL_Texture* m_txtr;
+
+	TTF_Font* m_font;
 public:
 	Gui();
 	int init();
@@ -41,9 +44,11 @@ public:
 	~Gui(){};
 private:
 	bool preInit();
+	bool initTextConfigs();
 	void drawBoard();	
 	void drawCellColor(int x, int y);
 	void drawSelection();
+	void drawScores();
 };
 
 #endif //_GUI_HPP_

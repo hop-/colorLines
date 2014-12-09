@@ -1,4 +1,5 @@
 #include "gui.hpp"
+#include <iostream>
 #include "test.hpp"
 
 Gui::Gui():
@@ -8,11 +9,13 @@ Gui::Gui():
 		m_surface(NULL),
 		m_renderer(NULL),
 		m_txtr(NULL)
+		//m_font(TTF_OpenFont("./textures/Capture_it.ttf", 24))
+		//m_textColor({255, 255, 255})
 {}
 
 bool Gui::preInit()
 {
-	m_surface = IMG_Load("./textures/textures.png");
+	m_surface = IMG_Load("./resources/texture.png");
 	if (m_surface != NULL) {
 		if (m_surface->w / m_surface->h  != 2 ||
 		    m_surface->w % 4 != 0 ||
@@ -25,10 +28,33 @@ bool Gui::preInit()
 		m_rectDst.w = m_cellSize;
 		m_rectDst.h = m_cellSize;
 		m_screenWidth = 9 * m_cellSize;
-		m_screenHeight = 9 * m_cellSize + 50;
+		m_screenHeight = 9 * m_cellSize;
 	} else {
 		return false;
 	}
+	return true;
+}
+
+bool Gui::initTextConfigs()
+{
+	TTF_Init();
+	int fontSize = m_cellSize;
+	SDL_Surface* tmp_surface = NULL;
+	SDL_Color testColor = {255, 0, 0};
+	do {
+		m_font = TTF_OpenFont("./resources/font.ttf",
+	        	              fontSize);
+		if (m_font == NULL) {
+			return false;
+		}
+		tmp_surface = TTF_RenderText_Solid(m_font, "0", testColor);
+		if (--fontSize < 1) {
+			return false;
+		}
+	} while (m_screenWidth < tmp_surface->w * 24 + 3 * tmp_surface->h);
+	m_screenHeight += tmp_surface->h;
+	SDL_FreeSurface(tmp_surface);
+	tmp_surface = NULL;
 	return true;
 }
 
@@ -38,6 +64,9 @@ int Gui::init()
 		return -1;
 	}
 	if (!preInit()) {
+		return -1;
+	}
+	if (!initTextConfigs()){
 		return -1;
 	}
 	m_window = SDL_CreateWindow("Interesting Game :)",
@@ -59,8 +88,6 @@ int Gui::init()
 	if (m_txtr == NULL) {
 		return -1;
 	}
-	SDL_FreeSurface(m_surface);
-	m_surface = NULL;
 	render();
 	return 0;
 }
@@ -73,6 +100,8 @@ void Gui::destroy()
 	m_window = NULL;
 	SDL_DestroyTexture(m_txtr);
 	m_txtr = NULL;
+	SDL_FreeSurface(m_surface);
+	m_surface = NULL;
 	SDL_Quit();
 }
 
@@ -80,6 +109,7 @@ void Gui::render()
 {
 	SDL_RenderClear(m_renderer);
 	drawBoard();
+	drawScores();
 	SDL_RenderPresent(m_renderer);
 }
 
@@ -122,6 +152,27 @@ void Gui::drawSelection()
 	}
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 	m_currentSelection = p;
+}
+
+void Gui::drawScores()
+{
+	SDL_Color yourColor = {255, 0, 0};
+	m_surface = TTF_RenderText_Solid(m_font, "Your: 230", yourColor);
+	SDL_Texture* Message = SDL_CreateTextureFromSurface(m_renderer, m_surface);
+	SDL_Rect tmp_rect;
+	tmp_rect.y = 9 * m_cellSize;
+	tmp_rect.x = 0;
+	tmp_rect.w = m_surface->w;
+	tmp_rect.h = m_surface->h;
+	SDL_RenderCopy(m_renderer, Message, NULL, &tmp_rect);
+
+	SDL_Color bestColor = {0, 255, 0};
+	m_surface = TTF_RenderText_Solid(m_font, "Best: 1230", bestColor);
+	Message = SDL_CreateTextureFromSurface(m_renderer, m_surface);
+	tmp_rect.x = 9 * m_cellSize - m_surface->w;
+	tmp_rect.w = m_surface->w;
+	tmp_rect.h = m_surface->h;
+	SDL_RenderCopy(m_renderer, Message, NULL, &tmp_rect);
 }
 
 void Gui::drawCellColor(int x, int y)
