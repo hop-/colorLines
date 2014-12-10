@@ -1,44 +1,100 @@
 #include "logic.hpp"
 #include "test.hpp"
 
+using namespace ColorLines;
+
 //
 //-----------------------------------------------------------
 //
 
-CLPosition::CLPosition(int posX = 0, int posY = 0) :
+Position::Position(int posX = 0, int posY = 0) :
 		x(posX),
 		y(posY)
 {}
 
-bool CLPosition::isCorrect()
+bool Position::isCorrect()
 {
 	return (x >= 0 && x < BOARD_SIZE &&
 		y >= 0 && y < BOARD_SIZE);
 }
 
-bool operator!=(CLPosition& a, CLPosition& b)
+bool operator!=(Position& a, Position& b)
 {
 	return (a.x != b.x || a.y != b.y);
 }
 
-bool operator==(CLPosition& a, CLPosition& b)
+bool operator==(Position& a, Position& b)
 {
 	return (a.x == b.x && a.y == b.y);
 }
 
 //
+//------------------------------------------------------------
+//
+
+Score::Score() :
+		m_best(0),
+		m_player(0),
+		m_file("./resources/best")
+{
+	read();
+}
+
+Score::~Score()
+{}
+
+void Score::newPlayerScore(int newScore)
+{
+	m_player = newScore;
+	if (m_player > m_best) {
+		newBest();
+	}
+}
+
+int Score::getPlayerScore()
+{
+	return m_player;
+}
+
+int Score::getBest()
+{
+	return m_best;
+}
+
+void Score::read()
+{
+	std::ifstream file(m_file.c_str(), std::ios::in | std::ios::binary);
+	if (file.is_open()) {
+		const int n = sizeof(int)/sizeof(char);
+		file.read(reinterpret_cast<char*>(&m_best), n);
+		file.close();
+	}
+}
+
+void Score::newBest()
+{
+	m_best = m_player;
+	std::ofstream file(m_file.c_str(), std::ios::out | std::ios::binary);
+	if (file.is_open()) {
+		const int n = sizeof(int)/sizeof(char);
+		file.write(reinterpret_cast<char*>(&m_best), n);
+		file.close();
+	}
+}
+
+//
 //-----------------------------------------------------------
 //
-CLCell::CLCell() : color(NOCOLOR)
+Cell::Cell() : color(NOCOLOR)
 {
 }
 
-CLColor CLCell::getColor()
+Color Cell::getColor()
 {
 	return color;
 }
 
-bool CLCell::setColor(CLColor newColor)
+bool Cell::setColor(Color newColor)
 {
 	if (color == NOCOLOR) {
 		color = newColor;
@@ -48,14 +104,14 @@ bool CLCell::setColor(CLColor newColor)
 	}
 }
 
-void CLCell::resetColor()
+void Cell::resetColor()
 {
 	color = NOCOLOR;
 }
 
-bool CLCell::setColor(CLCell* &c)
+bool Cell::setColor(Cell* &c)
 {
-	CLColor cColor = c->getColor();
+	Color cColor = c->getColor();
 	if (color == NOCOLOR && cColor != NOCOLOR) {
 		color = cColor;
 		c->resetColor();
@@ -67,32 +123,33 @@ bool CLCell::setColor(CLCell* &c)
 //
 //------------------------------------------------------------
 //
-CLBoard* CLBoard::m_instance = NULL;
+Board* Board::m_instance = NULL;
 
-CLBoard::CLBoard() : 
+Board::Board() : 
 		m_currentSelection(-1, -1),
-		m_isSelected(false)
+		m_isSelected(false),
+		m_score()
 {
 	for (int x = 0; x < BOARD_SIZE; ++x) {
 		for (int y = 0; y < BOARD_SIZE; ++y) {
-			board[x][y] = new CLCell();
+			board[x][y] = new Cell();
 		}
 	}
 	for (int i = 0; i < 3; ++i) {
-		nexts[i] = new CLCell();
+		nexts[i] = new Cell();
 	}
 	reset();
 }
 
-CLBoard* CLBoard::getInstance()
+Board* Board::getInstance()
 {
 	if (m_instance == NULL) {
-		m_instance = new CLBoard();
+		m_instance = new Board();
 	}
 	return m_instance;
 }
 
-CLBoard::~CLBoard()
+Board::~Board()
 {
 	for (int x = 0; x < BOARD_SIZE; ++x) {
 		for (int y = 0; y < BOARD_SIZE; ++y) {
@@ -104,18 +161,18 @@ CLBoard::~CLBoard()
 	}
 }
 
-CLCell* CLBoard::getCell(int x, int y)
+Cell* Board::getCell(int x, int y)
 {
 	return board[x][y];
 }
 
-void CLBoard::select(int posX, int posY)
+void Board::select(int posX, int posY)
 {
-	CLPosition p(posX, posY);
+	Position p(posX, posY);
 	select(p);
 }
 
-void CLBoard::select(CLPosition p)
+void Board::select(Position p)
 {
 	if (!isNotFill() ||
 	    !p.isCorrect())
@@ -138,52 +195,52 @@ void CLBoard::select(CLPosition p)
 	}
 }
 
-int CLBoard::getCommingColors()
+int Board::getCommingColors()
 {
 	//TODO
 	return 0;
 }
 
-void CLBoard::reset()
+void Board::reset()
 {
 	for (int x = 0; x < BOARD_SIZE; ++x) {
 		for (int y = 0; y < BOARD_SIZE; ++y) {
 			board[x][y]->resetColor();
 		}
 	}
-	m_score = 0;
+	m_score.newPlayerScore(0);
 	srand(time(NULL));
 	generateNexts();
 	putNextsToBoard();
 }
 
-void CLBoard::clearLines(CLPosition p)
+void Board::clearLines(Position p)
 {}
 
-bool CLBoard::isNotFill()
+bool Board::isNotFill()
 {
 	return  static_cast<bool>(getNmOfFreeCells());
 }
 
-CLPosition CLBoard::getSelection()
+Position Board::getSelection()
 {
 	return m_currentSelection;
 }
 
-bool CLBoard::isSelected()
+bool Board::isSelected()
 {
 	return m_isSelected;
 }
 
-void CLBoard::generateNexts()
+void Board::generateNexts()
 {
 	for (int i = 0; i < 3; ++i) {
 		nexts[i]->resetColor();
-		nexts[i]->setColor(static_cast<CLColor>(rand() % NOCOLOR));
+		nexts[i]->setColor(static_cast<Color>(rand() % NOCOLOR));
 	}
 }
 
-void CLBoard::putNextsToBoard()
+void Board::putNextsToBoard()
 {
 	if (isNotFill()) {
 		for (int i = 0; i < 3; ++i) {
@@ -204,7 +261,7 @@ void CLBoard::putNextsToBoard()
 				}
 			}
 			board[x][y]->setColor(nexts[i]->getColor());
-			CLPosition tmp(x, y);
+			Position tmp(x, y);
 			clearLines(tmp);
 			if (!isNotFill()) {
 				break;
@@ -213,7 +270,7 @@ void CLBoard::putNextsToBoard()
 	}
 }
 
-int CLBoard::getNmOfFreeCells()
+int Board::getNmOfFreeCells()
 {
 	int i = 0;
 	for (int x = 0 ; x < BOARD_SIZE; ++x) {
@@ -226,8 +283,18 @@ int CLBoard::getNmOfFreeCells()
 	return i;
 }
 
-bool CLBoard::hasWay(CLPosition p)
+bool Board::hasWay(Position p)
 {
 	//TODO
 	return true;
+}
+
+int Board::getBestScore()
+{
+	return m_score.getBest();
+}
+
+int Board::getPlayerScore()
+{
+	return m_score.getPlayerScore();
 }

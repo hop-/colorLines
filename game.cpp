@@ -1,7 +1,13 @@
 #include "game.hpp"
 
+using ColorLines::Event;
+using ColorLines::EV_SELECT;
+using ColorLines::EV_RESET;
+using ColorLines::EV_QUIT;
+using ColorLines::EV_NOEVENT;
+
 Game::Game() :
-		m_lgc(CLBoard::getInstance()),
+		m_lgc(ColorLines::Board::getInstance()),
 		m_gi(new Gui()),
 		m_running(true)
 {}

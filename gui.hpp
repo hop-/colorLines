@@ -10,7 +10,8 @@
 #include "logic.hpp"
 #include "events.hpp"
 
-#include <iostream>
+#include <string>
+#include <sstream>
 
 class Gui :
 	public BaseGui
@@ -19,9 +20,9 @@ class Gui :
 	int m_screenWidth;
 	int m_screenHeight;
 
-	CLBoard* m_brd;
+	ColorLines::Board* m_brd;
 
-	CLPosition m_currentSelection;
+	ColorLines::Position m_currentSelection;
 
 	SDL_Window* m_window;
 
@@ -31,16 +32,22 @@ class Gui :
 
 	SDL_Rect m_rectSrc;
 	SDL_Rect m_rectDst;
+
+	SDL_Color m_playerScoreColor;
+	SDL_Color m_bestScoreColor;
 	
 	SDL_Texture* m_txtr;
 
 	TTF_Font* m_font;
+
+	int m_playerScore;
+	int m_bestScore;
 public:
 	Gui();
 	int init();
 	void destroy();
 	void render();
-	Event* getEvent();
+	ColorLines::Event* getEvent();
 	~Gui(){};
 private:
 	bool preInit();
@@ -49,6 +56,8 @@ private:
 	void drawCellColor(int x, int y);
 	void drawSelection();
 	void drawScores();
+	void drawScore(std::string pre, int score, SDL_Color color ,int x, int y, bool fromRight);
+	void drawNexts();
 };
 
 #endif //_GUI_HPP_

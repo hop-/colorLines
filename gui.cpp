@@ -2,15 +2,17 @@
 #include <iostream>
 #include "test.hpp"
 
+using namespace ColorLines;
+
 Gui::Gui():
-		m_brd(CLBoard::getInstance()),
+		m_brd(Board::getInstance()),
 		m_currentSelection(m_brd->getSelection()),
 		m_window(NULL),
 		m_surface(NULL),
 		m_renderer(NULL),
-		m_txtr(NULL)
-		//m_font(TTF_OpenFont("./textures/Capture_it.ttf", 24))
-		//m_textColor({255, 255, 255})
+		m_txtr(NULL),
+		m_playerScore(-1),
+		m_bestScore(-1)
 {}
 
 bool Gui::preInit()
@@ -110,6 +112,7 @@ void Gui::render()
 	SDL_RenderClear(m_renderer);
 	drawBoard();
 	drawScores();
+	drawNexts();
 	SDL_RenderPresent(m_renderer);
 }
 
@@ -136,7 +139,7 @@ void Gui::drawSelection()
 	if (!m_brd->isSelected()) {
 		return;
 	}
-	CLPosition p = m_brd->getSelection();
+	Position p = m_brd->getSelection();
 	SDL_Rect rect;
 	rect.x = m_cellSize * p.x;
 	rect.y = m_cellSize * p.y;
@@ -156,28 +159,79 @@ void Gui::drawSelection()
 
 void Gui::drawScores()
 {
-	SDL_Color yourColor = {255, 0, 0};
-	m_surface = TTF_RenderText_Solid(m_font, "Your: 230", yourColor);
-	SDL_Texture* Message = SDL_CreateTextureFromSurface(m_renderer, m_surface);
-	SDL_Rect tmp_rect;
-	tmp_rect.y = 9 * m_cellSize;
-	tmp_rect.x = 0;
-	tmp_rect.w = m_surface->w;
-	tmp_rect.h = m_surface->h;
-	SDL_RenderCopy(m_renderer, Message, NULL, &tmp_rect);
-
-	SDL_Color bestColor = {0, 255, 0};
-	m_surface = TTF_RenderText_Solid(m_font, "Best: 1230", bestColor);
-	Message = SDL_CreateTextureFromSurface(m_renderer, m_surface);
-	tmp_rect.x = 9 * m_cellSize - m_surface->w;
-	tmp_rect.w = m_surface->w;
-	tmp_rect.h = m_surface->h;
-	SDL_RenderCopy(m_renderer, Message, NULL, &tmp_rect);
+	if (m_playerScore != m_brd->getPlayerScore()) {
+		m_playerScore = m_brd->getPlayerScore();
+		if (!m_playerScore) {
+			m_bestScore = m_brd->getBestScore();
+		}
+		if (m_playerScore > m_bestScore) {
+			m_playerScoreColor.r = 0;
+			m_playerScoreColor.g = 255;
+			m_playerScoreColor.b = 0; 
+			
+			m_bestScoreColor.r = 100;
+			m_bestScoreColor.g = 100;
+			m_bestScoreColor.b = 100;
+		} else {
+			int halfBest =  m_bestScore / 2;
+			if (m_playerScore < halfBest) {
+				m_playerScoreColor.r = 255;
+				m_playerScoreColor.g = m_playerScore 
+				                       *
+						       double(255 / halfBest);
+				m_playerScoreColor.b = 0; 
+			} else {
+				m_playerScoreColor.r = 255 
+				                       -
+						       (m_playerScore - halfBest)
+						       *
+						       double(255 / halfBest);
+				m_playerScoreColor.g = 255;
+				m_playerScoreColor.b = 0; 
+			}
+			m_bestScoreColor.r = 0;
+			m_bestScoreColor.g = 255;
+			m_bestScoreColor.b = 0;
+		}
+	}
+	drawScore("Your: ",
+		  m_playerScore,
+		  m_playerScoreColor,
+		  0,
+		  9 * m_cellSize,
+		  false);
+	drawScore("Best: ",
+		  m_bestScore,
+		  m_bestScoreColor,
+		  9 * m_cellSize,
+		  9 * m_cellSize,
+		  true);
 }
+
+void Gui::drawScore(std::string pre, int score, SDL_Color color ,int x, int y, bool fromRight)
+{
+	std::stringstream ss;
+	ss << score;
+	std::string scoreTxt = pre + ss.str();
+	m_surface = TTF_RenderText_Solid(m_font,
+	                                 scoreTxt.c_str(),
+					 color);
+	SDL_Texture* tmptxtr = SDL_CreateTextureFromSurface(m_renderer,
+							    m_surface);
+	SDL_Rect tmp_rect;
+	tmp_rect.x = x - fromRight * m_surface->w;
+	tmp_rect.y = y;
+	tmp_rect.w = m_surface->w;
+	tmp_rect.h = m_surface->h;
+	SDL_RenderCopy(m_renderer, tmptxtr, NULL, &tmp_rect);
+}
+
+void Gui::drawNexts()
+{}
 
 void Gui::drawCellColor(int x, int y)
 {
-	CLCell* cell = m_brd->getCell(x, y);
+	Cell* cell = m_brd->getCell(x, y);
 	switch (cell->getColor()) {
 	  case COLOR1:
 		m_rectSrc.x = m_cellSize;

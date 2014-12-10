@@ -9,7 +9,7 @@ public:
 	virtual int init() = 0;
 	virtual void destroy() = 0;
 	virtual void render() = 0;
-	virtual Event* getEvent() = 0;
+	virtual ColorLines::Event* getEvent() = 0;
 	virtual ~BaseGui(){};
 };
 

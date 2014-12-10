@@ -8,7 +8,7 @@
 
 class Game
 {
-	CLBoard* m_lgc;
+	ColorLines::Board* m_lgc;
 	BaseGui* m_gi;
 	bool m_running;
 public:
