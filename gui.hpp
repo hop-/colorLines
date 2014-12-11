@@ -12,6 +12,7 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 
 class Gui :
 	public BaseGui
@@ -53,11 +54,11 @@ private:
 	bool preInit();
 	bool initTextConfigs();
 	void drawBoard();	
-	void drawCellColor(int x, int y);
+	void drawCell(ColorLines::Cell* cell);
 	void drawSelection();
 	void drawScores();
 	void drawScore(std::string pre, int score, SDL_Color color ,int x, int y, bool fromRight);
-	void drawNexts();
+	void drawCommings();
 };
 
 #endif //_GUI_HPP_

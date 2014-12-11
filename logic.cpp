@@ -195,10 +195,13 @@ void Board::select(Position p)
 	}
 }
 
-int Board::getCommingColors()
+std::vector<Cell*> Board::getCommingColors()
 {
-	//TODO
-	return 0;
+	std::vector<Cell*> commings;
+	for (int i = 0; i < 3; ++i) {
+		commings.push_back(nexts[i]);
+	}
+	return commings;
 }
 
 void Board::reset()
@@ -212,6 +215,7 @@ void Board::reset()
 	srand(time(NULL));
 	generateNexts();
 	putNextsToBoard();
+	generateNexts();
 }
 
 void Board::clearLines(Position p)

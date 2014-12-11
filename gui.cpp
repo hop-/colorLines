@@ -112,23 +112,19 @@ void Gui::render()
 	SDL_RenderClear(m_renderer);
 	drawBoard();
 	drawScores();
-	drawNexts();
+	drawCommings();
 	SDL_RenderPresent(m_renderer);
 }
 
 void Gui::drawBoard()
 {
+	m_rectDst.w = m_cellSize;
+	m_rectDst.h = m_cellSize;
 	for (int x = 0; x < 9; ++x) {
 		for (int y = 0; y < 9; ++y) {
-			m_rectSrc.x = 0;
-			m_rectSrc.y = 0;
 			m_rectDst.x = x * m_cellSize;
 			m_rectDst.y = y * m_cellSize;
-			SDL_RenderCopy(m_renderer,
-			               m_txtr,
-				       &m_rectSrc,
-				       &m_rectDst);
-			drawCellColor(x, y);
+			drawCell(m_brd->getCell(x, y));
 		}
 	}
 	drawSelection();
@@ -226,12 +222,27 @@ void Gui::drawScore(std::string pre, int score, SDL_Color color ,int x, int y, b
 	SDL_RenderCopy(m_renderer, tmptxtr, NULL, &tmp_rect);
 }
 
-void Gui::drawNexts()
-{}
-
-void Gui::drawCellColor(int x, int y)
+void Gui::drawCommings()
 {
-	Cell* cell = m_brd->getCell(x, y);
+	std::vector<Cell*> tmpCommings = m_brd->getCommingColors();
+	m_rectDst.w = m_screenHeight - 9 * m_cellSize;
+	m_rectDst.h = m_rectDst.w;
+	m_rectDst.y = 9 * m_cellSize;
+	int dx = 0 - m_rectDst.w;
+	for (int i = 0; i < static_cast<int>(tmpCommings.size()); ++i, dx += m_rectDst.w) {
+			m_rectDst.x = m_screenWidth / 2 - m_rectDst.w / 2 -dx;
+			drawCell(tmpCommings[i]);
+	}
+}
+
+void Gui::drawCell(Cell* cell)
+{
+	m_rectSrc.x = 0;
+	m_rectSrc.y = 0;
+	SDL_RenderCopy(m_renderer,
+	               m_txtr,
+		       &m_rectSrc,
+		       &m_rectDst);
 	switch (cell->getColor()) {
 	  case COLOR1:
 		m_rectSrc.x = m_cellSize;

@@ -75,7 +75,7 @@ namespace ColorLines {
 		~Board();
 		void select(int posX, int posY);
 		void select(Position p);
-		int getCommingColors();
+		std::vector<Cell*> getCommingColors();
 		Cell* getCell(int x, int y);
 		void reset();
 		bool isNotFill();
