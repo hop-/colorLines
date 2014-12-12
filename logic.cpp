@@ -18,14 +18,14 @@ bool Position::isCorrect()
 		y >= 0 && y < BOARD_SIZE);
 }
 
-bool operator!=(Position& a, Position& b)
+bool Position::operator!=(const Position& b)
 {
-	return (a.x != b.x || a.y != b.y);
+	return (x != b.x || y != b.y);
 }
 
-bool operator==(Position& a, Position& b)
+bool Position::operator==(const Position& b)
 {
-	return (a.x == b.x && a.y == b.y);
+	return (x == b.x && y == b.y);
 }
 
 //
@@ -181,14 +181,15 @@ void Board::select(Position p)
 	}
 	if (m_isSelected &&
 	    board[p.x][p.y]->getColor() == NOCOLOR &&
-	    board[m_currentSelection.x][m_currentSelection.y]->getColor() != NOCOLOR &&
-	    hasWay(p))
+	    board[m_currentSelection.x][m_currentSelection.y]->getColor() != NOCOLOR)
 	{
-		board[p.x][p.y]->setColor(board[m_currentSelection.x][m_currentSelection.y]);
-		clearLines(p);
-		putNextsToBoard();
-		generateNexts();
-		m_isSelected = false;
+		if (hasWay(p)) {
+			board[p.x][p.y]->setColor(board[m_currentSelection.x][m_currentSelection.y]);
+			clearLines(p);
+			putNextsToBoard();
+			generateNexts();
+			m_isSelected = false;
+		}
 	} else {
 		m_currentSelection = p;
 		m_isSelected = true;
@@ -219,7 +220,49 @@ void Board::reset()
 }
 
 void Board::clearLines(Position p)
-{}
+{
+	int dx, dy;
+	std::vector<Cell*> allLines;
+	allLines.push_back(board[p.x][p.y]);
+	for (dx = 0; dx <= 1; ++dx) {
+		for (dy = -1; dy <= 1; ++dy) {
+			if (dx == 0 && dy < 1) {
+				continue;
+			}
+			std::vector<Cell*> inLine;
+			getInLines(&inLine, p, dx, dy);
+			getInLines(&inLine, p, -dx, -dy);
+			//if(inLine.size()) _PRINT(inLine.size());
+			if (inLine.size() >= 4) {
+				allLines.insert(allLines.end(),
+						inLine.begin(),
+						inLine.end());
+			}
+		}
+	}
+	if (allLines.size() > 1) {
+		for (int i = 0; i < static_cast<int>(allLines.size()); ++i) {
+			allLines[i]->resetColor();
+		}
+		m_score.newPlayerScore(m_score.getPlayerScore() + 10 * (allLines.size() - 4));
+	}
+
+}
+
+void Board::getInLines(std::vector<Cell*>* l, Position p, int dx, int dy)
+{
+	Position t;
+	for (t = p; t.isCorrect(); t.x += dx, t.y += dy) {
+		if (t == p) {
+			continue;
+		}
+		if(board[t.x][t.y]->getColor() == board[p.x][p.y]->getColor()) {
+			l->push_back(board[t.x][t.y]);
+		} else {
+			break;
+		}
+	}
+}
 
 bool Board::isNotFill()
 {
@@ -289,8 +332,34 @@ int Board::getNmOfFreeCells()
 
 bool Board::hasWay(Position p)
 {
-	//TODO
-	return true;
+	bool tmpBoard[BOARD_SIZE][BOARD_SIZE] = {false};
+	recFill(m_currentSelection, p, tmpBoard);
+	return tmpBoard[p.x][p.y];
+}
+
+void Board::recFill(Position& crnt, const Position& p, bool brd[BOARD_SIZE][BOARD_SIZE])
+{
+	if (crnt.x != m_currentSelection.x || crnt.y != m_currentSelection.y) {
+		if (!crnt.isCorrect() ||
+		    brd[crnt.x][crnt.y] ||
+		    board[crnt.x][crnt.y]->getColor() != NOCOLOR) {
+			return;
+		}
+	}
+	brd[crnt.x][crnt.y] = true;
+	if (brd[p.x][p.y]) {
+		return;
+	}
+	Position tmp = crnt;
+	tmp.x++;
+	recFill(tmp, p, brd);
+	tmp.x -= 2;
+	recFill(tmp, p, brd);
+	tmp.x++;
+	tmp.y++;
+	recFill(tmp, p, brd);
+	tmp.y -= 2;
+	recFill(tmp, p, brd);
 }
 
 int Board::getBestScore()

@@ -30,10 +30,9 @@ namespace ColorLines {
 
 		Position(int posX, int posY);
 		bool isCorrect();
+		bool operator!=(const Position& b);
+		bool operator==(const Position& b);
 	};
-
-	bool operator!=(Position& a, Position& b);
-	bool operator==(Position& a, Position& b);
 
 	class Score
 	{
@@ -88,9 +87,11 @@ namespace ColorLines {
 		Board();
 		void generateNexts();
 		void clearLines(Position p);
+		void getInLines(std::vector<Cell*>* l, Position p, int dx, int dy);
 		int getNmOfFreeCells();	
 		void putNextsToBoard();
 		bool hasWay(Position p);
+		void recFill(Position& crnt,const Position& p, bool board[][BOARD_SIZE]);
 	};
 }
 #endif
