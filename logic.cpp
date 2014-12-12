@@ -132,11 +132,11 @@ Board::Board() :
 {
 	for (int x = 0; x < BOARD_SIZE; ++x) {
 		for (int y = 0; y < BOARD_SIZE; ++y) {
-			board[x][y] = new Cell();
+			m_board[x][y] = new Cell();
 		}
 	}
 	for (int i = 0; i < 3; ++i) {
-		nexts[i] = new Cell();
+		m_nexts[i] = new Cell();
 	}
 	reset();
 }
@@ -153,17 +153,17 @@ Board::~Board()
 {
 	for (int x = 0; x < BOARD_SIZE; ++x) {
 		for (int y = 0; y < BOARD_SIZE; ++y) {
-			delete board[x][y];
+			delete m_board[x][y];
 		}
 	}
 	for (int i = 0; i < 3; ++i) {
-		delete nexts[i];
+		delete m_nexts[i];
 	}
 }
 
 Cell* Board::getCell(int x, int y)
 {
-	return board[x][y];
+	return m_board[x][y];
 }
 
 void Board::select(int posX, int posY)
@@ -180,11 +180,11 @@ void Board::select(Position p)
 		return;
 	}
 	if (m_isSelected &&
-	    board[p.x][p.y]->getColor() == NOCOLOR &&
-	    board[m_currentSelection.x][m_currentSelection.y]->getColor() != NOCOLOR)
+	    m_board[p.x][p.y]->getColor() == NOCOLOR &&
+	    m_board[m_currentSelection.x][m_currentSelection.y]->getColor() != NOCOLOR)
 	{
 		if (hasWay(p)) {
-			board[p.x][p.y]->setColor(board[m_currentSelection.x][m_currentSelection.y]);
+			m_board[p.x][p.y]->setColor(m_board[m_currentSelection.x][m_currentSelection.y]);
 			clearLines(p);
 			putNextsToBoard();
 			generateNexts();
@@ -200,7 +200,7 @@ std::vector<Cell*> Board::getCommingColors()
 {
 	std::vector<Cell*> commings;
 	for (int i = 0; i < 3; ++i) {
-		commings.push_back(nexts[i]);
+		commings.push_back(m_nexts[i]);
 	}
 	return commings;
 }
@@ -209,7 +209,7 @@ void Board::reset()
 {
 	for (int x = 0; x < BOARD_SIZE; ++x) {
 		for (int y = 0; y < BOARD_SIZE; ++y) {
-			board[x][y]->resetColor();
+			m_board[x][y]->resetColor();
 		}
 	}
 	m_score.newPlayerScore(0);
@@ -223,7 +223,7 @@ void Board::clearLines(Position p)
 {
 	int dx, dy;
 	std::vector<Cell*> allLines;
-	allLines.push_back(board[p.x][p.y]);
+	allLines.push_back(m_board[p.x][p.y]);
 	for (dx = 0; dx <= 1; ++dx) {
 		for (dy = -1; dy <= 1; ++dy) {
 			if (dx == 0 && dy < 1) {
@@ -256,8 +256,8 @@ void Board::getInLines(std::vector<Cell*>* l, Position p, int dx, int dy)
 		if (t == p) {
 			continue;
 		}
-		if(board[t.x][t.y]->getColor() == board[p.x][p.y]->getColor()) {
-			l->push_back(board[t.x][t.y]);
+		if(m_board[t.x][t.y]->getColor() == m_board[p.x][p.y]->getColor()) {
+			l->push_back(m_board[t.x][t.y]);
 		} else {
 			break;
 		}
@@ -282,8 +282,8 @@ bool Board::isSelected()
 void Board::generateNexts()
 {
 	for (int i = 0; i < 3; ++i) {
-		nexts[i]->resetColor();
-		nexts[i]->setColor(static_cast<Color>(rand() % NOCOLOR));
+		m_nexts[i]->resetColor();
+		m_nexts[i]->setColor(static_cast<Color>(rand() % NOCOLOR));
 	}
 }
 
@@ -297,7 +297,7 @@ void Board::putNextsToBoard()
 			int y;
 			for (x = 0; x < BOARD_SIZE; ++x) {
 				for (y = 0; y < BOARD_SIZE; ++y) {
-					if (board[x][y]->getColor() == NOCOLOR) {
+					if (m_board[x][y]->getColor() == NOCOLOR) {
 						if (++p == r) {
 							break;
 						}
@@ -307,7 +307,7 @@ void Board::putNextsToBoard()
 					break;
 				}
 			}
-			board[x][y]->setColor(nexts[i]->getColor());
+			m_board[x][y]->setColor(m_nexts[i]->getColor());
 			Position tmp(x, y);
 			clearLines(tmp);
 			if (!isNotFill()) {
@@ -322,7 +322,7 @@ int Board::getNmOfFreeCells()
 	int i = 0;
 	for (int x = 0 ; x < BOARD_SIZE; ++x) {
 		for (int y = 0; y < BOARD_SIZE; ++y) {
-			if (board[x][y]->getColor() == NOCOLOR) {
+			if (m_board[x][y]->getColor() == NOCOLOR) {
 				++i;
 			}
 		}
@@ -342,7 +342,7 @@ void Board::recFill(Position& crnt, const Position& p, bool brd[BOARD_SIZE][BOAR
 	if (crnt.x != m_currentSelection.x || crnt.y != m_currentSelection.y) {
 		if (!crnt.isCorrect() ||
 		    brd[crnt.x][crnt.y] ||
-		    board[crnt.x][crnt.y]->getColor() != NOCOLOR) {
+		    m_board[crnt.x][crnt.y]->getColor() != NOCOLOR) {
 			return;
 		}
 	}

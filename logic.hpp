@@ -63,10 +63,10 @@ namespace ColorLines {
 
 	class Board
 	{
-		Cell* board[9][9];
+		Cell* m_board[9][9];
 		Position m_currentSelection;
 		bool m_isSelected;
-		Cell* nexts[3];
+		Cell* m_nexts[3];
 		Score m_score;
 		static Board* m_instance;
 	public:
