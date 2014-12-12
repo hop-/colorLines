@@ -160,7 +160,7 @@ void Gui::drawScores()
 		if (!m_playerScore) {
 			m_bestScore = m_brd->getBestScore();
 		}
-		if (m_playerScore > m_bestScore) {
+		if (!m_bestScore || m_playerScore > m_bestScore) {
 			m_playerScoreColor.r = 0;
 			m_playerScoreColor.g = 255;
 			m_playerScoreColor.b = 0; 
