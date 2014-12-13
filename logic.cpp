@@ -217,6 +217,7 @@ void Board::reset()
 	srand(time(NULL));
 	generateNexts();
 	putNextsToBoard();
+	m_changes = true;
 }
 
 bool Board::clearLines(Position p)
