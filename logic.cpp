@@ -128,6 +128,7 @@ Board* Board::m_instance = NULL;
 Board::Board() : 
 		m_currentSelection(-1, -1),
 		m_isSelected(false),
+		m_changes(true),
 		m_score()
 {
 	for (int x = 0; x < BOARD_SIZE; ++x) {
@@ -185,15 +186,15 @@ void Board::select(Position p)
 	{
 		if (hasWay(p)) {
 			m_board[p.x][p.y]->setColor(m_board[m_currentSelection.x][m_currentSelection.y]);
-			clearLines(p);
-			putNextsToBoard();
-			generateNexts();
+			if (!clearLines(p))
+				putNextsToBoard();
 			m_isSelected = false;
 		}
 	} else {
 		m_currentSelection = p;
 		m_isSelected = true;
 	}
+	m_changes = true;
 }
 
 std::vector<Cell*> Board::getCommingColors()
@@ -216,10 +217,9 @@ void Board::reset()
 	srand(time(NULL));
 	generateNexts();
 	putNextsToBoard();
-	generateNexts();
 }
 
-void Board::clearLines(Position p)
+bool Board::clearLines(Position p)
 {
 	int dx, dy;
 	std::vector<Cell*> allLines;
@@ -232,7 +232,6 @@ void Board::clearLines(Position p)
 			std::vector<Cell*> inLine;
 			getInLines(&inLine, p, dx, dy);
 			getInLines(&inLine, p, -dx, -dy);
-			//if(inLine.size()) _PRINT(inLine.size());
 			if (inLine.size() >= 4) {
 				allLines.insert(allLines.end(),
 						inLine.begin(),
@@ -240,13 +239,14 @@ void Board::clearLines(Position p)
 			}
 		}
 	}
-	if (allLines.size() > 1) {
+	if (allLines.size() >= 5) {
 		for (int i = 0; i < static_cast<int>(allLines.size()); ++i) {
 			allLines[i]->resetColor();
 		}
 		m_score.newPlayerScore(m_score.getPlayerScore() + 10 * (allLines.size() - 4));
+		return true;
 	}
-
+	return false;
 }
 
 void Board::getInLines(std::vector<Cell*>* l, Position p, int dx, int dy)
@@ -314,6 +314,7 @@ void Board::putNextsToBoard()
 				break;
 			}
 		}
+		generateNexts();
 	}
 }
 
@@ -360,6 +361,16 @@ void Board::recFill(Position& crnt, const Position& p, bool brd[BOARD_SIZE][BOAR
 	recFill(tmp, p, brd);
 	tmp.y -= 2;
 	recFill(tmp, p, brd);
+}
+
+bool Board::isChange()
+{
+	return m_changes;
+}
+
+void Board::changesCatched()
+{
+	m_changes = false;
 }
 
 int Board::getBestScore()

@@ -109,10 +109,13 @@ void Gui::destroy()
 
 void Gui::render()
 {
-	SDL_RenderClear(m_renderer);
-	drawBoard();
-	drawScores();
-	drawCommings();
+	if (m_brd->isChange()) {
+		SDL_RenderClear(m_renderer);
+		drawBoard();
+		drawScores();
+		drawCommings();
+		m_brd->changesCatched();
+	}
 	SDL_RenderPresent(m_renderer);
 }
 
@@ -220,6 +223,10 @@ void Gui::drawScore(std::string pre, int score, SDL_Color color ,int x, int y, b
 	tmp_rect.w = m_surface->w;
 	tmp_rect.h = m_surface->h;
 	SDL_RenderCopy(m_renderer, tmptxtr, NULL, &tmp_rect);
+	SDL_DestroyTexture(tmptxtr);
+	tmptxtr = NULL;
+	SDL_FreeSurface(m_surface);
+	m_surface = NULL;
 }
 
 void Gui::drawCommings()

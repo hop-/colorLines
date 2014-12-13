@@ -66,6 +66,7 @@ namespace ColorLines {
 		Cell* m_board[9][9];
 		Position m_currentSelection;
 		bool m_isSelected;
+		bool m_changes;
 		Cell* m_nexts[3];
 		Score m_score;
 		static Board* m_instance;
@@ -81,12 +82,15 @@ namespace ColorLines {
 		Position getSelection();
 		bool isSelected();
 
+		bool isChange();
+		void changesCatched();
+
 		int getBestScore();
 		int getPlayerScore();
 	protected:
 		Board();
 		void generateNexts();
-		void clearLines(Position p);
+		bool clearLines(Position p);
 		void getInLines(std::vector<Cell*>* l, Position p, int dx, int dy);
 		int getNmOfFreeCells();	
 		void putNextsToBoard();
