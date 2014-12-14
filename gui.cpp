@@ -48,6 +48,7 @@ bool Gui::initTextConfigs()
 	SDL_Surface* tmp_surface = NULL;
 	SDL_Color testColor = {255, 0, 0};
 	do {
+		TTF_CloseFont(m_fontScore);
 		m_fontScore = TTF_OpenFont("./resources/font.ttf",
 	        	              fontSize);
 		if (m_fontScore == NULL) {
@@ -115,6 +116,7 @@ void Gui::destroy()
 	m_txtr = NULL;
 	SDL_FreeSurface(m_surface);
 	m_surface = NULL;
+	TTF_Quit();
 	SDL_Quit();
 }
 
