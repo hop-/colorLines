@@ -73,8 +73,8 @@ namespace ColorLines {
 	public:
 		static Board* getInstance();
 		~Board();
-		void select(int posX, int posY);
-		void select(Position p);
+		bool select(int posX, int posY);
+		bool select(Position p);
 		std::vector<Cell*> getCommingColors();
 		Cell* getCell(int x, int y);
 		void reset();

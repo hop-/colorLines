@@ -14,51 +14,69 @@
 #include <sstream>
 #include <vector>
 
-class Gui :
-	public BaseGui
-{
-	int m_cellSize;
-	int m_screenWidth;
-	int m_screenHeight;
+namespace SDL_ColorLines {
 
-	ColorLines::Board* m_brd;
+	enum AlignHeight {
+		h_top,
+		h_center,
+		h_bottom
+	};
 
-	ColorLines::Position m_currentSelection;
+	enum AlignWidth {
+		w_left,
+		w_center,
+		w_right
+	};
 
-	SDL_Window* m_window;
+	class Gui :
+		public BaseGui
+	{
+		int m_cellSize;
+		int m_screenWidth;
+		int m_screenHeight;
+		bool m_lockGameEvents;
 
-	SDL_Surface* m_surface;
+		ColorLines::Board* m_brd;
 
-	SDL_Renderer* m_renderer;
+		ColorLines::Position m_currentSelection;
 
-	SDL_Rect m_rectSrc;
-	SDL_Rect m_rectDst;
+		SDL_Window* m_window;
 
-	SDL_Color m_playerScoreColor;
-	SDL_Color m_bestScoreColor;
+		SDL_Surface* m_surface;
+
+		SDL_Renderer* m_renderer;
+
+		SDL_Rect m_rectSrc;
+		SDL_Rect m_rectDst;
+
+		SDL_Color m_playerScoreColor;
+		SDL_Color m_bestScoreColor;
 	
-	SDL_Texture* m_txtr;
+		SDL_Texture* m_txtr;
 
-	TTF_Font* m_font;
+		TTF_Font* m_fontScore;
+		TTF_Font* m_fontGameOver;
 
-	int m_playerScore;
-	int m_bestScore;
-public:
-	Gui();
-	int init();
-	void destroy();
-	void render();
-	ColorLines::Event* getEvent();
-	~Gui(){};
-private:
-	bool preInit();
-	bool initTextConfigs();
-	void drawBoard();	
-	void drawCell(ColorLines::Cell* cell);
-	void drawSelection();
-	void drawScores();
-	void drawScore(std::string pre, int score, SDL_Color color ,int x, int y, bool fromRight);
-	void drawCommings();
-};
-
+		int m_playerScore;
+		int m_bestScore;
+	public:
+		Gui();
+		int init();
+		void destroy();
+		void render();
+		ColorLines::Event* getEvent();
+		~Gui(){};
+	private:
+		bool preInit();
+		bool initTextConfigs();
+		void drawBoard();	
+		void drawCell(ColorLines::Cell* cell);
+		void drawSelection();
+		void drawScores();
+		void drawScore(std::string pre, int score, SDL_Color color ,int x, int y, bool fromRight);
+		void drawText(std::string text, SDL_Color color, TTF_Font* font, int x, int y, AlignHeight h, AlignWidth w);
+		void drawCommings();
+		void drawGameOver();
+	};
+}
 #endif //_GUI_HPP_

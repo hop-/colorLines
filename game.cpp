@@ -8,7 +8,7 @@ using ColorLines::EV_NOEVENT;
 
 Game::Game() :
 		m_lgc(ColorLines::Board::getInstance()),
-		m_gi(new Gui()),
+		m_gi(new SDL_ColorLines::Gui()),
 		m_running(true)
 {}
 

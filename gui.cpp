@@ -3,14 +3,18 @@
 #include "test.hpp"
 
 using namespace ColorLines;
+using namespace SDL_ColorLines;
 
 Gui::Gui():
+		m_lockGameEvents(false),
 		m_brd(Board::getInstance()),
 		m_currentSelection(m_brd->getSelection()),
 		m_window(NULL),
 		m_surface(NULL),
 		m_renderer(NULL),
 		m_txtr(NULL),
+		m_fontScore(NULL),
+		m_fontGameOver(NULL),
 		m_playerScore(-1),
 		m_bestScore(-1)
 {}
@@ -40,18 +44,25 @@ bool Gui::preInit()
 bool Gui::initTextConfigs()
 {
 	TTF_Init();
-	int fontSize = m_cellSize;
+	int fontSize = 2 * m_cellSize;
 	SDL_Surface* tmp_surface = NULL;
 	SDL_Color testColor = {255, 0, 0};
 	do {
-		m_font = TTF_OpenFont("./resources/font.ttf",
+		m_fontScore = TTF_OpenFont("./resources/font.ttf",
 	        	              fontSize);
-		if (m_font == NULL) {
+		if (m_fontScore == NULL) {
 			return false;
 		}
-		tmp_surface = TTF_RenderText_Solid(m_font, "0", testColor);
+		tmp_surface = TTF_RenderText_Solid(m_fontScore, "0", testColor);
 		if (--fontSize < 1) {
 			return false;
+		}
+		if (NULL == m_fontGameOver && m_screenWidth >= 11 * tmp_surface->w) {
+			m_fontGameOver = TTF_OpenFont("./resources/font.ttf",
+						      fontSize);
+			if (m_fontGameOver == NULL) {
+				return false;
+			}
 		}
 	} while (m_screenWidth < tmp_surface->w * 24 + 3 * tmp_surface->h);
 	m_screenHeight += tmp_surface->h;
@@ -109,11 +120,13 @@ void Gui::destroy()
 
 void Gui::render()
 {
-	if (m_brd->isChange()) {
+	if (m_brd->isChange() || m_lockGameEvents) {
 		SDL_RenderClear(m_renderer);
 		drawBoard();
 		drawScores();
 		drawCommings();
+		if (!m_brd->isNotFill())
+			drawGameOver();
 		m_brd->changesCatched();
 	}
 	SDL_RenderPresent(m_renderer);
@@ -212,14 +225,49 @@ void Gui::drawScore(std::string pre, int score, SDL_Color color ,int x, int y, b
 	std::stringstream ss;
 	ss << score;
 	std::string scoreTxt = pre + ss.str();
-	m_surface = TTF_RenderText_Solid(m_font,
-	                                 scoreTxt.c_str(),
+	AlignWidth w;
+	if (fromRight) {
+		w = SDL_ColorLines::w_right;
+	} else {
+		w = SDL_ColorLines::w_left;
+	}
+	drawText(scoreTxt, color,
+		 m_fontScore,
+		 x, y,
+		 SDL_ColorLines::h_top,
+		 w);
+}
+
+void Gui::drawText(std::string text, SDL_Color color, TTF_Font* font, int x, int y, AlignHeight h, AlignWidth w) 
+{
+	m_surface = TTF_RenderText_Solid(font,
+	                                 text.c_str(),
 					 color);
 	SDL_Texture* tmptxtr = SDL_CreateTextureFromSurface(m_renderer,
 							    m_surface);
 	SDL_Rect tmp_rect;
-	tmp_rect.x = x - fromRight * m_surface->w;
-	tmp_rect.y = y;
+	switch (w) {
+	  case SDL_ColorLines::w_left:
+		tmp_rect.x = x;
+	  break;
+	  case SDL_ColorLines::w_center:
+		tmp_rect.x = x - m_surface->w / 2;
+	  break;
+	  case SDL_ColorLines::w_right:
+		tmp_rect.x = x - m_surface->w;
+	  break;
+	}
+	switch (h) {
+	  case SDL_ColorLines::h_top:
+		tmp_rect.y = y;
+	  break;
+	  case SDL_ColorLines::h_center:
+		tmp_rect.y = y - m_surface->h / 2;
+	  break;
+	  case SDL_ColorLines::h_bottom:
+		tmp_rect.y = y - m_surface->w;
+	  break;
+	}
 	tmp_rect.w = m_surface->w;
 	tmp_rect.h = m_surface->h;
 	SDL_RenderCopy(m_renderer, tmptxtr, NULL, &tmp_rect);
@@ -289,31 +337,50 @@ void Gui::drawCell(Cell* cell)
 	}
 }
 
+void Gui::drawGameOver()
+{
+	drawText("Game Over",
+		 m_playerScoreColor,
+		 m_fontGameOver,
+		 m_screenWidth / 2,
+		 m_screenHeight / 2,
+		 SDL_ColorLines::h_center,
+		 SDL_ColorLines::w_center);
+	m_lockGameEvents = true;
+}
+
 Event* Gui::getEvent()
 {
 	Event* gameEvent = NULL;
 	SDL_Event sdlEvent;
 	if(SDL_WaitEvent(&sdlEvent)) {
 		gameEvent = new Event;
-		switch (sdlEvent.type) {
-		  case SDL_MOUSEBUTTONDOWN:
-			if (sdlEvent.button.button == SDL_BUTTON_LEFT) {
-				gameEvent->type = EV_SELECT;
-				gameEvent->x = sdlEvent.button.x / (m_screenWidth / BOARD_SIZE);
-				gameEvent->y = sdlEvent.button.y / (m_screenWidth / BOARD_SIZE);
-			}
-		  break;
-		  case SDL_QUIT:
-			gameEvent->type = EV_QUIT;
-		  break;
-		  case SDL_KEYUP:
-		  	switch (sdlEvent.key.keysym.scancode) {
-			  case SDL_SCANCODE_F2:
-				gameEvent->type = EV_RESET;
-			  default:
+		if (!m_lockGameEvents) {
+			switch (sdlEvent.type) {
+			  case SDL_MOUSEBUTTONDOWN:
+				if (sdlEvent.button.button == SDL_BUTTON_LEFT) {
+					gameEvent->type = EV_SELECT;
+					gameEvent->x = sdlEvent.button.x / (m_screenWidth / BOARD_SIZE);
+					gameEvent->y = sdlEvent.button.y / (m_screenWidth / BOARD_SIZE);
+				}
+			  break;
+			  case SDL_QUIT:
+				gameEvent->type = EV_QUIT;
+			  break;
+			  case SDL_KEYUP:
+			  	switch (sdlEvent.key.keysym.scancode) {
+				  case SDL_SCANCODE_F2:
+					gameEvent->type = EV_RESET;
+				  default:
+				  break;
+				}
 			  break;
 			}
-		  break;
+		} else {
+			if (sdlEvent.type == SDL_MOUSEBUTTONDOWN ) {
+				gameEvent->type = EV_RESET;
+				m_lockGameEvents = false;
+			}
 		}
 	}
 	return gameEvent;

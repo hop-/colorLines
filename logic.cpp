@@ -167,18 +167,18 @@ Cell* Board::getCell(int x, int y)
 	return m_board[x][y];
 }
 
-void Board::select(int posX, int posY)
+bool Board::select(int posX, int posY)
 {
 	Position p(posX, posY);
-	select(p);
+	return select(p);
 }
 
-void Board::select(Position p)
+bool Board::select(Position p)
 {
 	if (!isNotFill() ||
 	    !p.isCorrect())
 	{
-		return;
+		return false;
 	}
 	if (m_isSelected &&
 	    m_board[p.x][p.y]->getColor() == NOCOLOR &&
@@ -189,12 +189,16 @@ void Board::select(Position p)
 			if (!clearLines(p))
 				putNextsToBoard();
 			m_isSelected = false;
+			m_changes = true;
+			return true;
 		}
 	} else {
 		m_currentSelection = p;
 		m_isSelected = true;
+		m_changes = true;
+		return true;
 	}
-	m_changes = true;
+	return false;
 }
 
 std::vector<Cell*> Board::getCommingColors()
@@ -217,6 +221,7 @@ void Board::reset()
 	srand(time(NULL));
 	generateNexts();
 	putNextsToBoard();
+	m_changes = true;
 }
 
 bool Board::clearLines(Position p)
