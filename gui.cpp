@@ -174,8 +174,8 @@ void Gui::drawSelection()
 void Gui::drawScores()
 {
 	if (m_playerScore != m_brd->getPlayerScore()) {
-		m_playerScore +=2; //m_brd->getPlayerScore();
-		if (m_playerScore) {
+		m_playerScore = m_brd->getPlayerScore();
+		if (!m_playerScore) {
 			m_bestScore = m_brd->getBestScore();
 		}
 		if (!m_bestScore || m_playerScore > m_bestScore) {
