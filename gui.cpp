@@ -174,8 +174,8 @@ void Gui::drawSelection()
 void Gui::drawScores()
 {
 	if (m_playerScore != m_brd->getPlayerScore()) {
-		m_playerScore = m_brd->getPlayerScore();
-		if (!m_playerScore) {
+		m_playerScore +=2; //m_brd->getPlayerScore();
+		if (m_playerScore) {
 			m_bestScore = m_brd->getBestScore();
 		}
 		if (!m_bestScore || m_playerScore > m_bestScore) {
@@ -190,16 +190,16 @@ void Gui::drawScores()
 			int halfBest =  m_bestScore / 2;
 			if (m_playerScore < halfBest) {
 				m_playerScoreColor.r = 255;
-				m_playerScoreColor.g = m_playerScore 
+				m_playerScoreColor.g = m_playerScore
 				                       *
-						       double(255 / halfBest);
+						       255.0 / halfBest;
 				m_playerScoreColor.b = 0; 
 			} else {
 				m_playerScoreColor.r = 255 
 				                       -
 						       (m_playerScore - halfBest)
 						       *
-						       double(255 / halfBest);
+						       255.0 / halfBest;
 				m_playerScoreColor.g = 255;
 				m_playerScoreColor.b = 0; 
 			}
