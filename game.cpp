@@ -34,9 +34,11 @@ void Game::mainLoop()
 			switch(e->type){
 			  case EV_SELECT:
 				m_lgc->select(e->x, e->y);
+		        m_gi->render();
 			  break;
 			  case EV_RESET:
 			  	m_lgc->reset();
+		        m_gi->render();
 			  break;
 			  case EV_QUIT:
 				m_running = false;
@@ -45,6 +47,5 @@ void Game::mainLoop()
 			}
 			delete e;
 		}
-		m_gi->render();
 	}
 }
